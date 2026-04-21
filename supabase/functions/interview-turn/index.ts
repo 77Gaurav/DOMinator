@@ -5,21 +5,20 @@ const SYSTEM_PROMPT_BASE = `You are X, a Lead Engineer at a top tech company con
 
 You ALWAYS speak as the interviewer. Refer to the candidate as "you". Output is rendered as Markdown.
 
-You follow this 8-step protocol STRICTLY:
-1. **Question** — provide a SEMI-FORMULATED question about a real, daily React engineering problem at the candidate's difficulty. Leave a clear gap for the candidate to complete (e.g. "...how would you ensure ___?"). End with a single concrete prompt asking them to complete or restate the question.
-2. **Interpretation** — ask the candidate to explain in detail what they understood from the question. Do NOT give the answer yet.
-3. **Confirm** — judge their interpretation. If correct, briefly confirm and move to approach. If incorrect or partial, gently correct and re-anchor the question. Set advance=true only when interpretation is solid.
-4. **Approach** — ask them to outline their approach (data flow, components, hooks, edge cases, trade-offs).
-5. **Brainstorm** — if approach is solid, accept and move to coding. If gaps, brainstorm WITH them by asking pointed questions. Set advance=true once a viable approach is agreed.
-6. **Code** — at this step the UI shows a code editor. ACKNOWLEDGE that they should now write the solution in the editor on the right and click Submit. Keep your message short — one or two encouraging sentences plus any final constraints (e.g. "use hooks, no class components"). When the candidate submits code (it will appear in the next user message), evaluate it. If correct enough to optimise, set advance=true. If clearly wrong, request fixes and keep the editor open (advance=false, next_step=6).
-7. **Optimise** — discuss optimisations (memoization, render perf, accessibility, error handling, edge cases). Ask probing questions, accept improvements. When you're satisfied, set advance=true to move to the final review.
-8. **Review** — produce the FINAL detailed code review and overall performance summary in markdown. After this message, the interview is complete.
+You follow this 6-step protocol STRICTLY:
+1. **Question** — pose a SEMI-FORMULATED question about a real, daily React engineering problem at the candidate's difficulty. Leave a clear gap for the candidate to complete (e.g. "...how would you ensure ___?"). End with a single concrete prompt asking them to complete or restate the question. ALWAYS advance=true after posing the question (we move to Interpretation immediately on next turn).
+2. **Interpretation** — read the candidate's restatement/interpretation. If correct, briefly confirm and set advance=true to move to Approach. If incorrect or partial, gently correct, re-anchor, ask them to try again, and set advance=false. DO NOT reveal the solution.
+3. **Approach** — ask the candidate to outline their approach as pseudocode (data flow, components, hooks, edge cases, trade-offs). Evaluate it. If the approach is viable/correct enough to start coding, set advance=true (this will open the code editor). If gaps exist, ask pointed questions, suggest considerations, and KEEP advance=false — stay in this step until the approach is solid. NEVER advance with a wrong approach.
+4. **Code** — the UI now shows a code editor. ACKNOWLEDGE that the candidate should write the solution in the editor on the right and click Submit. Keep your message short — one or two encouraging sentences plus any final constraints. When the candidate submits code (it appears in the next user message), evaluate it. If correct enough to optimise, set advance=true. If clearly wrong, request fixes and keep the editor open (advance=false).
+5. **Optimization** — discuss optimisations (memoization, render perf, accessibility, error handling, edge cases). Ask probing questions, accept improvements. When satisfied, set advance=true to move to the final review.
+6. **Review** — produce the FINAL detailed code review and overall performance summary in markdown. After this message, the interview is complete.
 
 RULES:
-- One step per message. Be concise (3-8 sentences) except step 1 (the question itself can be longer) and step 8 (full review).
+- One step per message. Be concise (3-8 sentences) except step 1 (the question itself can be longer) and step 6 (full review).
 - Choose questions about REAL daily problems engineers actually face: controlled inputs, useEffect dependency arrays, debouncing, throttling, list virtualization, suspense boundaries, error boundaries, custom hooks, memoization pitfalls, render optimization, accessibility, form validation, derived state, race conditions in fetches, etc. Avoid leetcode-style puzzles.
 - Tailor difficulty: intern (foundations), junior (idiomatic patterns), senior (production patterns), lead (architecture), architect (systems & scale).
-- NEVER reveal the full solution before step 8. Hint, do not solve.
+- NEVER reveal the full solution before step 6. Hint, do not solve.
+- CRITICAL: Never advance from Approach (step 3) to Code (step 4) unless the candidate's pseudocode/approach is correct and viable. The code editor only opens once approach is approved.
 - Always set the topic on the first turn (a 2-5 word phrase).
 `;
 
@@ -41,6 +40,10 @@ type FinalScore = {
   summary: string;
   topic?: string;
 };
+
+const TOTAL_STEPS = 6;
+const FINAL_STEP = 6;
+const CODE_STEP = 4;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -79,7 +82,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Load interview + history
     const { data: interview, error: ivErr } = await supabase
       .from("interviews")
       .select("*")
@@ -98,7 +100,6 @@ Deno.serve(async (req) => {
       .eq("interview_id", interview_id)
       .order("created_at", { ascending: true });
 
-    // Persist candidate message if any
     if (candidate_message || code_submission) {
       await supabase.from("interview_messages").insert({
         interview_id,
@@ -110,7 +111,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Build chat history for the AI
     const history: Array<{ role: string; content: string }> = (msgs ?? []).map((m: any) => ({
       role: m.role === "interviewer" ? "assistant" : "user",
       content:
@@ -130,31 +130,28 @@ Deno.serve(async (req) => {
 
     const isFirstTurn = (msgs ?? []).length === 0 && !candidate_message;
     const currentStep = interview.current_step;
-    const isFinalStep = currentStep >= 8;
+    const isFinalStep = currentStep >= FINAL_STEP;
 
     const systemPrompt = `${SYSTEM_PROMPT_BASE}
 
 CONTEXT:
 - Difficulty: ${interview.difficulty}
 - Current step: ${currentStep} (${stepName(currentStep)})
-- ${isFirstTurn ? "This is the FIRST turn. Begin with Step 1: pose the semi-formulated question." : "Continue the interview."}
+- ${isFirstTurn ? "This is the FIRST turn. Begin with Step 1: pose the semi-formulated question and set advance=true so we move to Interpretation." : "Continue the interview."}
 - For intern difficulty the candidate may submit JSX or TSX. For all other difficulties, only TSX is accepted.
 `;
 
     if (isFinalStep) {
-      // FINAL REVIEW with tool calling for structured output
       const finalResp = await callAIStructured(LOVABLE_API_KEY, systemPrompt, history, interview.difficulty);
       if (finalResp instanceof Response) return finalResp;
 
-      // Save assistant message
       await supabase.from("interview_messages").insert({
         interview_id,
-        step: 8,
+        step: FINAL_STEP,
         role: "interviewer",
         content: finalResp.message,
       });
 
-      // Save scores + complete interview
       await supabase.from("interview_scores").insert({
         interview_id,
         interpretation_score: finalResp.interpretation_score,
@@ -186,13 +183,11 @@ CONTEXT:
       );
     }
 
-    // Normal step — structured tool call (non-streaming, simpler + reliable)
     const turnResp = await callAITurn(LOVABLE_API_KEY, systemPrompt, history);
     if (turnResp instanceof Response) return turnResp;
 
-    const nextStep = turnResp.advance ? Math.min(currentStep + 1, 8) : currentStep;
+    const nextStep = turnResp.advance ? Math.min(currentStep + 1, FINAL_STEP) : currentStep;
 
-    // Save interviewer message
     await supabase.from("interview_messages").insert({
       interview_id,
       step: currentStep,
@@ -200,7 +195,6 @@ CONTEXT:
       content: turnResp.message,
     });
 
-    // Update interview state
     const updates: Record<string, unknown> = { current_step: nextStep };
     if (turnResp.topic && !interview.topic) updates.topic = turnResp.topic;
     await supabase.from("interviews").update(updates).eq("id", interview_id);
@@ -227,11 +221,9 @@ function stepName(step: number) {
   return [
     "Question",
     "Interpretation",
-    "Confirm interpretation",
     "Approach",
-    "Brainstorm",
     "Code editor",
-    "Optimise",
+    "Optimization",
     "Final review",
   ][step - 1];
 }
@@ -308,7 +300,7 @@ async function callAIStructured(
         ...history,
         {
           role: "user",
-          content: `Now produce the FINAL Step 8 review for this ${difficulty}-level interview. Score each dimension out of 10 (decimals allowed), compute the overall score, and recommend a hire verdict. The "message" field is the full markdown review shown to the candidate (strengths, weaknesses, scope of improvement, concrete next steps). The "summary" field is a 2-3 sentence executive summary.`,
+          content: `Now produce the FINAL Step 6 review for this ${difficulty}-level interview. Score each dimension out of 10 (decimals allowed), compute the overall score, and recommend a hire verdict. The "message" field is the full markdown review shown to the candidate (strengths, weaknesses, scope of improvement, concrete next steps). The "summary" field is a 2-3 sentence executive summary.`,
         },
       ],
       tools: [
