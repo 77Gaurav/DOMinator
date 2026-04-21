@@ -379,7 +379,7 @@ const Interview = () => {
                 rows={6}
                 className="w-full resize-y min-h-[140px] max-h-[400px] bg-background/60 border-border/60 rounded-xl"
               />
-              <div className="flex items-center justify-end gap-2">
+              <div className="flex items-center justify-center gap-3">
                 <MicButton
                   disabled={sending || isCodeStep}
                   onTranscript={(text) => {
@@ -394,6 +394,9 @@ const Interview = () => {
                 >
                   <Send className="h-4 w-4" />
                 </Button>
+                <span className="text-xs text-muted-foreground">
+                  Press <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/60 text-[10px] font-mono">Enter</kbd> to send
+                </span>
               </div>
             </div>
           )}
