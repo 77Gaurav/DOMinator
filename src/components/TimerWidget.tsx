@@ -155,7 +155,7 @@ export function TimerWidget() {
         <PopoverTrigger asChild>
           <button
             className={cn(
-              "h-9 w-9 grid place-items-center rounded-md border border-border bg-secondary/40 hover:bg-secondary transition-smooth",
+              "h-9 w-9 grid place-items-center rounded-full border border-border bg-secondary/40 hover:bg-secondary transition-smooth",
               activeMode && "ring-2 ring-primary/30",
             )}
             aria-label="Stopwatch and timer"
@@ -163,7 +163,7 @@ export function TimerWidget() {
             <TimerIcon className="h-4 w-4" />
           </button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-[300px] p-3 glass-strong">
+        <PopoverContent align="end" className="w-[300px] p-3 glass-strong rounded-xl">
           {view === "select" && (
             <SelectorView
               onPick={(m) => setView(m)}
