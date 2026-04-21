@@ -200,9 +200,9 @@ const Dashboard = () => {
                       }}
                       aria-label="Delete interview"
                       title="Delete interview"
-                      className="absolute top-3 right-3 z-10 h-7 w-7 inline-flex items-center justify-center rounded-full border border-border/60 bg-background/70 text-muted-foreground hover:text-destructive hover:border-destructive/60 hover:bg-destructive/10 transition-smooth opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      className="absolute top-3 right-3 z-10 h-7 w-7 inline-flex items-center justify-center rounded-full border border-border/60 bg-background/70 text-red-600 hover:text-red-600 hover:border-red-600/60 hover:bg-red-600/10 transition-smooth opacity-0 group-hover:opacity-100 focus:opacity-100"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5 text-red-600" />
                     </button>
 
                     <button
@@ -219,7 +219,10 @@ const Dashboard = () => {
                           </p>
                         </div>
                         {iv.status === "in_progress" && (
-                          <Badge variant="outline" className="border-warning text-warning">
+                          <Badge
+                            variant="outline"
+                            className="border-warning text-warning whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
+                          >
                             In progress
                           </Badge>
                         )}
@@ -259,7 +262,7 @@ const Dashboard = () => {
       </main>
 
       <AlertDialog open={!!pendingDelete} onOpenChange={(open) => !open && setPendingDelete(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this interview?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -276,7 +279,7 @@ const Dashboard = () => {
                 handleDelete();
               }}
               disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-red-600 text-white hover:bg-red-600/90"
             >
               {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
             </AlertDialogAction>

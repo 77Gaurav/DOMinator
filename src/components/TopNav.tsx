@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "./ThemeToggle";
@@ -17,6 +17,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export function TopNav() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const showTimer = location.pathname.startsWith("/interview/");
 
   const initials =
     user?.user_metadata?.full_name
@@ -45,7 +47,7 @@ export function TopNav() {
           </Link>
 
           <div className="flex items-center gap-3">
-            <TimerWidget />
+            {showTimer && <TimerWidget />}
             <ThemeToggle />
             {user && (
               <DropdownMenu>
