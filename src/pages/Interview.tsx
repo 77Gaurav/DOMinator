@@ -78,7 +78,7 @@ const Interview = () => {
     () => DIFFICULTIES.find((d) => d.id === interview?.difficulty),
     [interview?.difficulty],
   );
-  const isCodeStep = interview?.current_step === 6;
+  const isCodeStep = interview?.current_step === 4;
   const isCompleted = interview?.status === "completed";
   const allowJsxToggle = interview?.difficulty === "intern";
 
