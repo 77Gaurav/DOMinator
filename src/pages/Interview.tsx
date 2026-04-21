@@ -336,10 +336,10 @@ const Interview = () => {
         </div>
       </div>
 
-      <div className="container flex-1 py-6 grid gap-6 lg:grid-cols-[1fr_1fr] min-h-0">
+      <div className="container flex-1 py-6 grid gap-6 lg:grid-cols-[1fr_1fr] min-h-0 overflow-hidden">
         {/* Left: chat */}
-        <div className="glass rounded-2xl flex flex-col min-h-[500px]">
-          <ScrollArea ref={scrollRef as any} className="flex-1 p-5">
+        <div className="glass rounded-2xl flex flex-col min-h-0 h-full overflow-hidden">
+          <ScrollArea ref={scrollRef as any} className="flex-1 min-h-0 p-5">
             <div className="space-y-4">
               {messages.map((m) => (
                 <MessageBubble key={m.id} m={m} />
@@ -403,7 +403,7 @@ const Interview = () => {
         </div>
 
         {/* Right: context / editor */}
-        <div className="glass rounded-2xl flex flex-col min-h-[500px] overflow-hidden">
+        <div className="glass rounded-2xl flex flex-col min-h-0 h-full overflow-hidden">
           {isCodeStep ? (
             <>
               <div className="flex items-center justify-between border-b border-border/40 p-3 bg-secondary/30">
