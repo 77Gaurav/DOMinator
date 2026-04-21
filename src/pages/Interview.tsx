@@ -494,14 +494,14 @@ const Interview = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   {allowJsxToggle && (
-                    <div className="flex rounded-lg bg-background/60 p-0.5">
+                    <div className="flex rounded-full bg-background/60 p-0.5">
                       {(["jsx", "tsx"] as const).map((l) => (
                         <button
                           key={l}
                           onClick={() => setLanguage(l)}
-                          className={`px-3 py-1 rounded-md text-xs font-mono font-semibold transition-smooth ${
+                          className={`px-3 py-1 rounded-full text-xs font-mono font-semibold transition-all duration-500 ease-out hover:scale-105 ${
                             language === l
-                              ? "gradient-bg text-primary-foreground shadow-button"
+                              ? "gradient-bg text-primary-foreground shadow-button animate-scale-in"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
