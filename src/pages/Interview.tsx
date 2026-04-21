@@ -252,7 +252,7 @@ const Interview = () => {
   }
 
   return (
-    <div className="min-h-screen relative flex flex-col">
+    <div className="h-screen relative flex flex-col overflow-hidden">
       <AmbientOrbs />
       <TopNav />
 
