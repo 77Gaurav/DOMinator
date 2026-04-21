@@ -21,6 +21,14 @@ const StartInterview = () => {
     if (!diff) navigate("/app");
   }, [diff, navigate]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") navigate("/app");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navigate]);
+
   const startInterview = async () => {
     if (!user || !diff) return;
     setCreating(true);
@@ -73,9 +81,9 @@ const StartInterview = () => {
               How it works
             </p>
             <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside">
-              <li>X gives you a semi-formulated question — you complete it.</li>
+              <li>DOMinator gives you a semi-formulated question — you complete it.</li>
               <li>Explain what you understood from the question.</li>
-              <li>Pitch your approach. X helps brainstorm if needed.</li>
+              <li>Pitch your approach. DOMinator helps brainstorm if needed.</li>
               <li>Code your solution in the editor (TSX{diff.id === "intern" ? " or JSX" : ""}).</li>
               <li>Optimise, then receive a full review with scores and a hire verdict.</li>
             </ol>
