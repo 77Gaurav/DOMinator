@@ -360,7 +360,7 @@ const Interview = () => {
           </ScrollArea>
 
           {!isCompleted && (
-            <div className="border-t border-border/40 p-3 flex gap-2">
+            <div className="border-t border-border/40 p-3 flex flex-col gap-2">
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -377,22 +377,24 @@ const Interview = () => {
                 }
                 disabled={sending || isCodeStep}
                 rows={6}
-                className="resize-y min-h-[140px] max-h-[400px] bg-background/60 border-border/60 rounded-xl"
+                className="w-full resize-y min-h-[140px] max-h-[400px] bg-background/60 border-border/60 rounded-xl"
               />
-              <MicButton
-                disabled={sending || isCodeStep}
-                onTranscript={(text) => {
-                  if (!text) return;
-                  setInput((prev) => (prev ? `${prev} ${text}` : text));
-                }}
-              />
-              <Button
-                onClick={handleSend}
-                disabled={sending || !input.trim() || isCodeStep}
-                className="rounded-xl gradient-bg text-primary-foreground self-end h-[52px] px-4 hover:scale-105 transition-smooth"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center justify-end gap-2">
+                <MicButton
+                  disabled={sending || isCodeStep}
+                  onTranscript={(text) => {
+                    if (!text) return;
+                    setInput((prev) => (prev ? `${prev} ${text}` : text));
+                  }}
+                />
+                <Button
+                  onClick={handleSend}
+                  disabled={sending || !input.trim() || isCodeStep}
+                  className="rounded-xl gradient-bg text-primary-foreground h-[52px] px-4 hover:scale-105 transition-smooth"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
         </div>
