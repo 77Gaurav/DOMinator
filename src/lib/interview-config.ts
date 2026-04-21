@@ -41,11 +41,9 @@ export type DifficultyId = (typeof DIFFICULTIES)[number]["id"];
 export const STEP_LABELS = [
   "Question",
   "Interpretation",
-  "Confirm",
   "Approach",
-  "Brainstorm",
   "Code",
-  "Optimize",
+  "Optimization",
   "Review",
 ];
 
