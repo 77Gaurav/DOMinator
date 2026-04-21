@@ -163,7 +163,7 @@ export function TimerWidget() {
             <TimerIcon className="h-4 w-4" />
           </button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-[300px] p-3 glass-strong">
+        <PopoverContent align="end" className="w-[300px] p-3 glass-strong rounded-xl">
           {view === "select" && (
             <SelectorView
               onPick={(m) => setView(m)}
