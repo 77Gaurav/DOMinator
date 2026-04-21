@@ -376,7 +376,8 @@ const Interview = () => {
                     : "Type your response..."
                 }
                 disabled={sending || isCodeStep}
-                className="resize-none min-h-[52px] max-h-32 bg-background/60 border-border/60 rounded-xl"
+                rows={6}
+                className="resize-y min-h-[140px] max-h-[400px] bg-background/60 border-border/60 rounded-xl"
               />
               <MicButton
                 disabled={sending || isCodeStep}
