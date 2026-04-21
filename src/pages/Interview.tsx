@@ -548,6 +548,24 @@ const Interview = () => {
 
 function MessageBubble({ m }: { m: Message }) {
   const isInterviewer = m.role === "interviewer";
+  // Highlight interviewer messages by phase:
+  // step 1 = Question (green), step 2 = Interpretation (accent)
+  const phaseClass = isInterviewer
+    ? m.step === 1
+      ? "border-2 border-success/60 bg-success/10 shadow-[0_0_24px_-8px_hsl(142_70%_45%/0.5)]"
+      : m.step === 2
+        ? "border-2 border-primary/50 bg-primary/10"
+        : "glass"
+    : "bg-primary/10 border border-primary/20";
+
+  const phaseLabel = isInterviewer
+    ? m.step === 1
+      ? { text: "Question", tone: "bg-success/20 text-success border border-success/40" }
+      : m.step === 2
+        ? { text: "Interpretation", tone: "bg-primary/20 text-primary border border-primary/40" }
+        : null
+    : null;
+
   return (
     <div className={`flex items-start gap-3 ${isInterviewer ? "" : "flex-row-reverse"}`}>
       <div
@@ -561,11 +579,14 @@ function MessageBubble({ m }: { m: Message }) {
           <UserIcon className="h-4 w-4" />
         )}
       </div>
-      <div
-        className={`rounded-2xl px-4 py-3 max-w-[85%] relative group ${
-          isInterviewer ? "glass" : "bg-primary/10 border border-primary/20"
-        }`}
-      >
+      <div className={`rounded-2xl px-4 py-3 max-w-[85%] relative group ${phaseClass}`}>
+        {phaseLabel && (
+          <div className="mb-2 flex">
+            <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${phaseLabel.tone}`}>
+              {phaseLabel.text}
+            </span>
+          </div>
+        )}
         <div className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-secondary/80 prose-pre:text-xs prose-code:font-mono prose-code:text-xs prose-headings:font-display prose-headings:font-bold">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
         </div>
