@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { DIFFICULTIES, STEP_LABELS } from "@/lib/interview-config";
-import { Bot, Code2, Loader2, Send, Sparkles, User as UserIcon } from "lucide-react";
+import { Bot, Code2, Loader2, Maximize2, Minimize2, Send, Sparkles, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 import { SpeakerButton } from "@/components/SpeakerButton";
 import { MicButton } from "@/components/MicButton";
@@ -71,6 +71,7 @@ const Interview = () => {
   const [language, setLanguage] = useState<"jsx" | "tsx">("tsx");
   const [code, setCode] = useState(DEFAULT_TSX);
   const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const diff = useMemo(
@@ -361,24 +362,35 @@ const Interview = () => {
 
           {!isCompleted && (
             <div className="border-t border-border/40 p-3 flex flex-col gap-2">
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
+              <div className="relative">
+                <Textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                  placeholder={
+                    isCodeStep
+                      ? "Submit your code from the editor →"
+                      : "Type your response..."
                   }
-                }}
-                placeholder={
-                  isCodeStep
-                    ? "Submit your code from the editor →"
-                    : "Type your response..."
-                }
-                disabled={sending || isCodeStep}
-                rows={6}
-                className="w-full resize-y min-h-[140px] max-h-[400px] bg-background/60 border-border/60 rounded-xl"
-              />
+                  disabled={sending || isCodeStep}
+                  rows={6}
+                  className="w-full resize-y min-h-[140px] max-h-[400px] bg-background/60 border-border/60 rounded-xl px-4 py-3 pr-12 leading-relaxed"
+                />
+                <button
+                  type="button"
+                  onClick={() => setExpanded(true)}
+                  disabled={isCodeStep}
+                  aria-label="Expand editor"
+                  className="absolute top-2 right-2 h-8 w-8 grid place-items-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors disabled:opacity-40"
+                >
+                  <Maximize2 className="h-4 w-4" />
+                </button>
+              </div>
               <div className="flex items-center justify-center gap-3">
                 <MicButton
                   disabled={sending || isCodeStep}
@@ -401,6 +413,69 @@ const Interview = () => {
             </div>
           )}
         </div>
+
+        {/* Expanded composer overlay */}
+        {expanded && !isCompleted && (
+          <div
+            className="fixed inset-0 z-50 bg-background/70 backdrop-blur-md grid place-items-center p-6 animate-in fade-in"
+            onClick={() => setExpanded(false)}
+          >
+            <div
+              className="glass rounded-2xl w-full max-w-3xl flex flex-col gap-3 p-4 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Compose your response</span>
+                <button
+                  type="button"
+                  onClick={() => setExpanded(false)}
+                  aria-label="Collapse editor"
+                  className="h-8 w-8 grid place-items-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                >
+                  <Minimize2 className="h-4 w-4" />
+                </button>
+              </div>
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                    setExpanded(false);
+                  }
+                  if (e.key === "Escape") setExpanded(false);
+                }}
+                placeholder="Type your response..."
+                disabled={sending || isCodeStep}
+                autoFocus
+                className="w-full resize-none bg-background/60 border-border/60 rounded-xl px-4 py-3 leading-relaxed h-[60vh]"
+              />
+              <div className="flex items-center justify-center gap-3">
+                <MicButton
+                  disabled={sending || isCodeStep}
+                  onTranscript={(text) => {
+                    if (!text) return;
+                    setInput((prev) => (prev ? `${prev} ${text}` : text));
+                  }}
+                />
+                <Button
+                  onClick={() => {
+                    handleSend();
+                    setExpanded(false);
+                  }}
+                  disabled={sending || !input.trim() || isCodeStep}
+                  className="rounded-xl gradient-bg text-primary-foreground h-[52px] px-4 hover:scale-105 transition-smooth"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/60 text-[10px] font-mono">Esc</kbd> to close
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Right: context / editor */}
         <div className="glass rounded-2xl flex flex-col min-h-0 h-full overflow-hidden">
