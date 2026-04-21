@@ -403,7 +403,7 @@ const Interview = () => {
         </div>
 
         {/* Right: context / editor */}
-        <div className="glass rounded-2xl flex flex-col min-h-[500px] overflow-hidden">
+        <div className="glass rounded-2xl flex flex-col min-h-0 h-full overflow-hidden">
           {isCodeStep ? (
             <>
               <div className="flex items-center justify-between border-b border-border/40 p-3 bg-secondary/30">
