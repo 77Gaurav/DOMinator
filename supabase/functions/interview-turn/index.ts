@@ -49,8 +49,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY missing");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -142,7 +142,7 @@ CONTEXT:
 `;
 
     if (isFinalStep) {
-      const finalResp = await callAIStructured(LOVABLE_API_KEY, systemPrompt, history, interview.difficulty);
+      const finalResp = await callAIStructured(GEMINI_API_KEY, systemPrompt, history, interview.difficulty);
       if (finalResp instanceof Response) return finalResp;
 
       await supabase.from("interview_messages").insert({
@@ -183,7 +183,7 @@ CONTEXT:
       );
     }
 
-    const turnResp = await callAITurn(LOVABLE_API_KEY, systemPrompt, history);
+    const turnResp = await callAITurn(GEMINI_API_KEY, systemPrompt, history);
     if (turnResp instanceof Response) return turnResp;
 
     const nextStep = turnResp.advance ? Math.min(currentStep + 1, FINAL_STEP) : currentStep;
@@ -233,11 +233,11 @@ async function callAITurn(
   system: string,
   history: Array<{ role: string; content: string }>,
 ): Promise<ToolResponse | Response> {
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       messages: [{ role: "system", content: system }, ...history],
       tools: [
         {
@@ -290,11 +290,11 @@ async function callAIStructured(
   history: Array<{ role: string; content: string }>,
   difficulty: string,
 ): Promise<FinalScore | Response> {
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       messages: [
         { role: "system", content: system },
         ...history,
@@ -358,13 +358,13 @@ function aiErrorResponse(resp: Response) {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  if (resp.status === 402) {
-    return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in workspace settings." }), {
-      status: 402,
+  if (resp.status === 402 || resp.status === 403) {
+    return new Response(JSON.stringify({ error: "Gemini API quota or billing issue. Check your Google AI Studio account." }), {
+      status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  return new Response(JSON.stringify({ error: `AI gateway error (${resp.status}).` }), {
+  return new Response(JSON.stringify({ error: `Gemini API error (${resp.status}).` }), {
     status: 500,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });

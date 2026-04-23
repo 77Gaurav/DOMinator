@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { lovable } from "@/integrations/lovable";
+import { supabase } from "@/integrations/supabase/client";
 import { AmbientOrbs } from "@/components/AmbientOrbs";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -17,10 +17,11 @@ const Landing = () => {
   }, [user, loading, navigate]);
 
   const handleSignIn = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/app`,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/app` },
     });
-    if ("error" in result && result.error) {
+    if (error) {
       toast.error("Sign-in failed. Please try again.");
     }
   };
@@ -122,7 +123,7 @@ const Landing = () => {
       </main>
 
       <footer className="container py-8 text-center text-sm text-muted-foreground">
-        Built with React • Powered by Lovable Cloud + AI
+        Built with React • Supabase • Gemini
       </footer>
     </div>
   );
