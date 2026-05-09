@@ -10,7 +10,7 @@ Stack: React 18 + Vite + Tailwind + shadcn/ui · Supabase (Auth/DB/Edge Function
 
 ### 1. Install
 ```bash
-npm install
+bun install
 ```
 
 ### 2. Configure environment
@@ -24,10 +24,18 @@ Fill in:
 ### 3. Provision the Supabase project
 Install the [Supabase CLI](https://supabase.com/docs/guides/cli), then:
 ```bash
+# Link to your Supabase project
 supabase link --project-ref <YOUR_PROJECT_REF>
+
+# Push local migrations to remote
 supabase db push
+
+# Or reset the database (WARNING: deletes all data)
+# supabase db reset
 ```
 This applies the migrations in `supabase/migrations/` (tables, RLS policies, the `handle_new_user` trigger, etc.).
+
+**RLS is enabled by default** — all tables have Row Level Security policies that restrict access to the authenticated user only (`auth.uid()`).
 
 ### 4. Set edge-function secrets
 ```bash
@@ -53,7 +61,7 @@ In the Supabase dashboard → **Authentication → Providers → Google**:
 
 ### 7. Run
 ```bash
-npm run dev
+bun run dev
 ```
 Open http://localhost:8080.
 
@@ -67,7 +75,7 @@ supabase gen types typescript --linked > src/integrations/supabase/types.ts
 
 ## Tests
 ```bash
-npm test
+bun run test
 ```
 
 ## Project layout

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import StartInterview from "./pages/StartInterview";

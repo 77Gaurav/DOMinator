@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";   //For react router and routing
+import { useAuth } from "@/contexts/AuthContext";   //For authentication 
+import { supabase } from "@/integrations/supabase/client";  //Supabase auth  : OAuth2.0 Google
 import { AmbientOrbs } from "@/components/AmbientOrbs";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Code2, Brain, Trophy } from "lucide-react";
-import { toast } from "sonner";
+import { ThemeToggle } from "@/components/ThemeToggle";   //Change Light and dark themes 
+import { Button } from "@/components/ui/button";        // its a button obviously
+import { ArrowRight, Code2, Brain, Trophy } from "lucide-react";    
+import { toast } from "sonner";       //pop up notifications is a toast
 
 const Landing = () => {
   const { user, loading } = useAuth();

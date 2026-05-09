@@ -1,5 +1,5 @@
-import { corsHeaders } from "npm:@supabase/supabase-js/cors";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.103.3/cors";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.3";
 
 const SYSTEM_PROMPT_BASE = `You are X, a Lead Engineer at a top tech company conducting a React interview with a candidate Y. You are direct, warm, professional, and rigorous — you do not hand out answers, but you guide.
 
@@ -233,16 +233,26 @@ async function callAITurn(
   system: string,
   history: Array<{ role: string; content: string }>,
 ): Promise<ToolResponse | Response> {
-  const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+  const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
     method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "gemini-2.5-flash",
-      messages: [{ role: "system", content: system }, ...history],
+      contents: [
+        { role: "user", parts: [{ text: system }] },
+        ...history.map(h => ({
+          role: h.role === "assistant" ? "model" : "user",
+          parts: [{ text: h.content }]
+        }))
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 1,
+        topP: 1,
+        maxOutputTokens: 2048,
+      },
       tools: [
         {
-          type: "function",
-          function: {
+          function_declarations: [{
             name: "interviewer_turn",
             description: "Produce the next interviewer message and signal whether to advance to the next step.",
             parameters: {
@@ -259,23 +269,27 @@ async function callAITurn(
                 },
               },
               required: ["message", "advance"],
-              additionalProperties: false,
             },
-          },
-        },
+          }]
+        }
       ],
-      tool_choice: { type: "function", function: { name: "interviewer_turn" } },
+      tool_config: {
+        function_calling_config: {
+          mode: "ANY",
+          allowed_function_names: ["interviewer_turn"]
+        }
+      }
     }),
   });
 
   if (!resp.ok) return aiErrorResponse(resp);
   const data = await resp.json();
-  const args = data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-  if (!args) {
-    const fallback = data.choices?.[0]?.message?.content ?? "I had trouble responding. Please try again.";
+  const functionCall = data.candidates?.[0]?.content?.parts?.[0]?.functionCall;
+  if (!functionCall || functionCall.name !== "interviewer_turn") {
+    const fallback = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "I had trouble responding. Please try again.";
     return { message: fallback, next_step: 0, advance: false };
   }
-  const parsed = JSON.parse(args);
+  const parsed = functionCall.args;
   return {
     message: parsed.message,
     advance: !!parsed.advance,
